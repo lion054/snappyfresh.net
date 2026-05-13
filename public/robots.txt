@@ -1,0 +1,40 @@
+# robots.txt for Snappy Fresh
+# https://snappyfresh.net
+
+# Allow all search engines to crawl the site
+User-agent: *
+Allow: /
+
+# Disallow private/user-specific pages
+Disallow: /api/
+Disallow: /profile/
+Disallow: /checkout
+Disallow: /cart
+Disallow: /shop-checkout
+Disallow: /wallet
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /dashboard
+Disallow: /account
+Disallow: /vendor-dashboard
+
+# Disallow test pages
+Disallow: /api-test
+Disallow: /test-schedules
+
+# Allow crawling of public shop pages
+Allow: /shop
+Allow: /products/
+Allow: /vendors
+Allow: /about
+Allow: /contact
+Allow: /faq
+
+# Crawl delay (optional - adjust based on server capacity)
+# Crawl-delay: 1
+
+# Sitemap location (dynamically generated)
+Sitemap: https://snappyfresh.net/api/sitemap.xml

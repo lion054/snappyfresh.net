@@ -1,0 +1,124 @@
+/* Custom Product Card Styles - Uniform Sizing */
+
+/* Make all product cards the same height */
+.product-cart-wrap {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+    min-height: 420px;
+}
+
+/* Ensure consistent image container height */
+.product-cart-wrap .product-img-action-wrap {
+    height: 280px;
+    min-height: 280px;
+    max-height: 280px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Make all product images the same size with object-fit */
+.product-cart-wrap .product-img-action-wrap .product-img {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-cart-wrap .product-img-action-wrap .product-img a {
+    height: 100%;
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.product-cart-wrap .product-img-action-wrap .product-img a img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+.product-cart-wrap .product-img-action-wrap .product-img a img.default-img {
+    opacity: 1;
+    visibility: visible;
+    position: relative;
+    z-index: 1;
+}
+
+.product-cart-wrap .product-img-action-wrap .product-img a img.hover-img {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    object-position: center;
+}
+
+/* Ensure product content takes remaining space */
+.product-cart-wrap .product-content-wrap {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    padding: 20px;
+}
+
+/* Make product titles consistent height */
+.product-cart-wrap .product-content-wrap h2 {
+    min-height: 48px;
+    line-height: 1.4;
+    margin-bottom: 10px;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+/* Ensure add to cart button stays at bottom */
+.product-cart-wrap .product-content-wrap .product-card-bottom {
+    margin-top: auto;
+}
+
+/* For slider products - same sizing */
+.carausel-4-columns-cover .product-cart-wrap {
+    min-height: 420px;
+}
+
+/* For list view products */
+.product-list .product-cart-wrap {
+    min-height: auto;
+}
+
+.product-list .product-img-action-wrap {
+    height: 220px;
+    min-height: 220px;
+    max-height: 220px;
+}
+
+/* Sold progress bar section - consistent height */
+.product-cart-wrap .sold {
+    min-height: 50px;
+}
+
+/* Skeleton height matching */
+.product-skeleton {
+  min-height: 420px;
+  display: flex;
+  flex-direction: column;
+}
+
+.product-skeleton .skeleton-image {
+  height: 280px;
+  min-height: 280px;
+}
+
+@media (max-width: 575px) {
+  .product-skeleton {
+    min-height: auto;
+  }
+  .product-skeleton .skeleton-image {
+    height: 150px;
+    min-height: 150px;
+  }
+}

@@ -1,0 +1,483 @@
+/**
+ * Snappy Fresh - API Transport Layer
+ * Contains the core HTTP client: token management, session handling, and raw HTTP verbs.
+ */
+
+import { secureStorage } from '../lib/secureStorage';
+import { logger } from '../lib/logger';
+
+/**
+ * Recursively convert PascalCase keys from SAP B1 API to camelCase.
+ * This means downstream code can rely on camelCase only instead of
+ * checking both `foo.DocTotal` and `foo.docTotal` everywhere.
+ */
+function toCamelCase(key: string): string {
+  return key.charAt(0).toLowerCase() + key.slice(1);
+}
+
+function normalizeKeys(value: unknown): unknown {
+  if (Array.isArray(value)) return value.map(normalizeKeys);
+  if (value !== null && typeof value === 'object') {
+    return Object.fromEntries(
+      Object.entries(value as Record<string, unknown>).map(([k, v]) => [
+        toCamelCase(k),
+        normalizeKeys(v),
+      ])
+    );
+  }
+  return value;
+}
+
+class ApiClient {
+  baseURL: string;
+  authUrl: string;
+  siteUrl: string;
+  returnUrl: string;
+  companyName: string;
+  title: string;
+  currency: string;
+  innbucksInterval: number;
+  pixelId: string;
+  gaMeasurementId: string;
+  sessionInitialized: boolean;
+  sessionPromise: Promise<any> | null;
+
+  // Product cache copied from oldyomik implementation
+  productCache: {
+    expireDateTime: Date;
+    params: any;
+    products: any;
+  };
+
+  constructor() {
+    // Validate critical environment variables
+    if (!process.env['NEXT_PUBLIC_API_BASE_URL']) {
+      logger.warn('NEXT_PUBLIC_API_BASE_URL is not set — using fallback. Set this in .env.local for production.');
+    }
+
+    this.baseURL = process.env['NEXT_PUBLIC_API_BASE_URL'] || 'https://yomilk.erpona.com:8092/api/';
+    this.authUrl = process.env['NEXT_PUBLIC_API_BASE_URL'] || 'https://yomilk.erpona.com:8092/api/';
+    this.siteUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://snappyfresh.net/';
+    this.returnUrl = process.env['NEXT_PUBLIC_RETURN_URL'] || 'https://snappyfresh.net/check-order';
+    this.companyName = process.env['NEXT_PUBLIC_COMPANY_NAME'] || 'Yomilk';
+    this.title = process.env['NEXT_PUBLIC_SITE_TITLE'] || 'Snappy Fresh';
+    this.currency = process.env['NEXT_PUBLIC_CURRENCY'] || 'USD';
+    this.innbucksInterval = parseInt(process.env['NEXT_PUBLIC_INNBUCKS_INTERVAL'] || '30000');
+    this.pixelId = process.env['NEXT_PUBLIC_FB_PIXEL_ID'] || '';
+    this.gaMeasurementId = process.env['NEXT_PUBLIC_GA_MEASUREMENT_ID'] || '';
+    this.sessionInitialized = false;
+    this.sessionPromise = null;
+
+    this.productCache = {
+      expireDateTime: new Date(0),
+      params: null,
+      products: null,
+    };
+
+    // Migrate from localStorage to secure storage on initialization
+    if (typeof window !== 'undefined') {
+      secureStorage.migrateFromLocalStorage();
+    }
+  }
+
+  /**
+   * Get authentication token from client-side cookie
+   */
+  getToken() {
+    if (typeof window !== 'undefined') {
+      return secureStorage.getToken();
+    }
+    return null;
+  }
+
+  /**
+   * Set authentication token in client-side cookie
+   */
+  setToken(token: string) {
+    if (typeof window !== 'undefined') {
+      secureStorage.setToken(token);
+    }
+  }
+
+  /**
+   * Get auth user session
+   */
+  getAuthUser() {
+    if (typeof window !== 'undefined') {
+      return secureStorage.getUser();
+    }
+    return null;
+  }
+
+  /**
+   * Save auth user session
+   */
+  saveAuthUser(authData: Record<string, unknown> & { token?: string; tokenExpiry?: string; customer?: Record<string, unknown> }) {
+    if (typeof window !== 'undefined') {
+      if (authData.token) {
+        if (!authData.tokenExpiry) {
+          const tokenExpiry = this.getTokenExpiryFromJwt(authData.token);
+          if (tokenExpiry) {
+            authData.tokenExpiry = tokenExpiry;
+          }
+        }
+        this.setToken(authData.token);
+      }
+      secureStorage.setUser(authData);
+    }
+  }
+
+  /**
+   * Derive token expiry from JWT (fallback when API does not provide tokenExpiry)
+   */
+  getTokenExpiryFromJwt(token: string): string | null {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1] ?? ''));
+      if (!payload.exp) {
+        return null;
+      }
+      return new Date(payload.exp * 1000).toISOString();
+    } catch (error) {
+      logger.error('Failed to parse JWT expiry:', error);
+      return null;
+    }
+  }
+
+  /**
+   * Clear authentication token and session data
+   */
+  clearToken() {
+    if (typeof window !== 'undefined') {
+      secureStorage.clearAll();
+    }
+  }
+
+  /**
+   * Check if user is authenticated
+   */
+  isAuthenticated() {
+    return !!this.getToken();
+  }
+
+  /**
+   * Check if the current token is expired by inspecting its JWT payload.
+   */
+  isTokenExpired(): boolean {
+    const token = this.getToken();
+    if (!token) return true;
+
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1] ?? ''));
+      if (!payload.exp) return false; // No expiry claim — assume valid
+      return Date.now() >= payload.exp * 1000;
+    } catch {
+      // Malformed token — treat as expired
+      return true;
+    }
+  }
+
+  /**
+   * Get or create cash customer session (guest session)
+   * This allows users to browse and shop without logging in
+   */
+  async ensureSession() {
+    // If we have a valid (non-expired) token, we're good
+    if (this.isAuthenticated() && !this.isTokenExpired()) {
+      return true;
+    }
+
+    // Token exists but is expired — clear it so we fetch a fresh one
+    if (this.isAuthenticated() && this.isTokenExpired()) {
+      logger.info('Session token expired — clearing stale session');
+      this.clearToken();
+      this.sessionInitialized = false;
+    }
+
+    // If a session is already being fetched, wait for it
+    if (this.sessionPromise) {
+      return this.sessionPromise;
+    }
+
+    this.sessionPromise = (async () => {
+      try {
+        logger.info('Getting Cash Customer Session (Guest Mode)');
+        const response = await fetch(`${this.authUrl}Auths/CashCustomer/Session`, {
+          method: 'GET',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json, text/html, */*',
+          },
+        });
+
+        if (!response.ok) {
+          throw new Error('Failed to get guest session');
+        }
+
+        const data = await response.json();
+
+        if (data && data.token) {
+          // Ensure guest sessions are marked as visitors
+          if (!data.customer) {
+            data.customer = {};
+          }
+          if (data.customer && data.customer.isVisitor === undefined) {
+            data.customer.isVisitor = true;
+          }
+
+          this.saveAuthUser(data);
+          this.sessionInitialized = true;
+          logger.info('Guest session initialized successfully');
+          return true;
+        }
+      } catch (error) {
+        logger.error('Error getting guest session:', error);
+        // Continue anyway - some endpoints might not need auth
+      } finally {
+        this.sessionPromise = null;
+      }
+
+      return false;
+    })();
+
+    return this.sessionPromise;
+  }
+
+  /**
+   * Build headers for API requests
+   */
+  buildHeaders(): Record<string, string> {
+    const headers: Record<string, string> = {
+      'Content-Type': 'application/json',
+      'Accept': 'application/json, text/html, */*',
+    };
+
+    const token = this.getToken();
+    if (token) {
+      headers['Authorization'] = `Bearer ${token}`;
+    }
+
+    return headers;
+  }
+
+  /**
+   * Handle API response.
+   * On 401 for guest sessions, automatically refresh and retry the request once.
+   */
+  async handleResponse(response: Response, retryRequest?: () => Promise<Response>): Promise<any> {
+    // Quick path for explicit 401 — clear session and try refresh before reading body
+    if (response.status === 401) {
+      this.clearToken();
+      this.sessionInitialized = false;
+
+      if (retryRequest) {
+        const refreshed = await this.ensureSession();
+        if (refreshed) {
+          logger.info('Session refreshed after 401 — retrying request');
+          const retryResponse = await retryRequest();
+          return this.handleResponse(retryResponse);
+        }
+      }
+
+      throw new Error('Unauthorized - Session expired');
+    }
+
+    let rawText = '';
+    try {
+      rawText = await response.text();
+    } catch (error) {
+      logger.error('Failed to read response text:', error);
+      throw new Error('Failed to read API response');
+    }
+
+    // Check if response is HTML (error page) instead of JSON
+    const isHtml = rawText.trim().toLowerCase().startsWith('<!doctype') ||
+                   rawText.trim().toLowerCase().startsWith('<html') ||
+                   rawText.trim().startsWith('<');
+
+    // Check if response looks like JSON
+    const isJson = rawText.trim().startsWith('{') || rawText.trim().startsWith('[');
+
+    if (!response.ok) {
+      let errorBody: { message?: string; error?: string } = {};
+      try {
+        if (isJson) {
+          errorBody = JSON.parse(rawText);
+        } else {
+          errorBody = { message: rawText || `HTTP Error ${response.status}` };
+        }
+      } catch (_err) {
+        errorBody = { message: rawText || `HTTP Error ${response.status}` };
+      }
+      const message = errorBody.message || errorBody.error || `HTTP Error ${response.status}`;
+
+      // Detect session expiry even when the server returns 500 instead of 401.
+      // The API wraps auth errors in a 500 with messages like
+      // "Invalid session or session already timeout. (401)"
+      const lowerMsg = message.toLowerCase();
+      const isSessionExpired =
+        response.status === 401 ||
+        lowerMsg.includes('session already timeout') ||
+        lowerMsg.includes('invalid session') ||
+        lowerMsg.includes('session expired') ||
+        (lowerMsg.includes('(401)'));
+
+      if (isSessionExpired && retryRequest) {
+        logger.info('Session expired (detected from response body) — refreshing');
+        this.clearToken();
+        this.sessionInitialized = false;
+
+        const refreshed = await this.ensureSession();
+        if (refreshed) {
+          logger.info('Session refreshed — retrying request');
+          const retryResponse = await retryRequest();
+          return this.handleResponse(retryResponse);
+        }
+      }
+
+      const error = Object.assign(new Error(message), {
+        status: response.status,
+        rawText,
+      });
+      throw error;
+    }
+
+    // Response is OK (200-299) - now parse the body
+    if (isHtml) {
+      logger.error('API returned HTML instead of JSON:', {
+        status: response.status,
+        endpoint: response.url,
+        firstChars: rawText.substring(0, 100),
+      });
+      throw new Error(`API endpoint returned HTML error page (Status: ${response.status}). Endpoint may not exist or may require different authentication.`);
+    }
+
+    if (!isJson) {
+      logger.warn('API returned non-JSON response:', {
+        status: response.status,
+        endpoint: response.url,
+        contentType: response.headers?.get('content-type'),
+        firstChars: rawText.substring(0, 100),
+      });
+      // Try to parse anyway - if it's empty, return empty object
+      if (rawText.trim().length === 0) {
+        return {};
+      }
+    }
+
+    try {
+      const parsed = JSON.parse(rawText);
+      return normalizeKeys(parsed);
+    } catch (error) {
+      logger.error('Failed to parse JSON response:', {
+        error,
+        responseText: rawText.substring(0, 200),
+        endpoint: response.url,
+      });
+      throw new Error('Invalid JSON response from API - endpoint may be misconfigured');
+    }
+  }
+
+  /**
+   * Make a GET request
+   */
+  async get(endpoint: string, params: Record<string, string> = {}, signal?: AbortSignal): Promise<any> {
+    await this.ensureSession();
+
+    let url = `${this.baseURL}${endpoint}`;
+
+    if (Object.keys(params).length > 0) {
+      url += `?${new URLSearchParams(params).toString()}`;
+    }
+
+    const doFetch = () => fetch(url, {
+      method: 'GET',
+      headers: this.buildHeaders(),
+      signal,
+    });
+
+    try {
+      const response = await doFetch();
+      return await this.handleResponse(response, doFetch);
+    } catch (error) {
+      logger.error('API GET Error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Make a POST request
+   */
+  async post(endpoint: string, data: unknown = {}, signal?: AbortSignal): Promise<any> {
+    // Don't ensure session for auth endpoints
+    if (!endpoint.includes('Auth')) {
+      await this.ensureSession();
+    }
+
+    const url = `${this.baseURL}${endpoint}`;
+
+    const doFetch = () => fetch(url, {
+      method: 'POST',
+      headers: this.buildHeaders(),
+      body: JSON.stringify(data),
+      signal,
+    });
+
+    try {
+      const response = await doFetch();
+      return await this.handleResponse(response, doFetch);
+    } catch (error) {
+      logger.error('API POST Error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Make a PUT request
+   */
+  async put(endpoint: string, data: unknown = {}, signal?: AbortSignal): Promise<any> {
+    await this.ensureSession();
+
+    const url = `${this.baseURL}${endpoint}`;
+
+    const doFetch = () => fetch(url, {
+      method: 'PUT',
+      headers: this.buildHeaders(),
+      body: JSON.stringify(data),
+      signal,
+    });
+
+    try {
+      const response = await doFetch();
+      return await this.handleResponse(response, doFetch);
+    } catch (error) {
+      logger.error('API PUT Error:', error);
+      throw error;
+    }
+  }
+
+  /**
+   * Make a DELETE request
+   */
+  async delete(endpoint: string, signal?: AbortSignal): Promise<any> {
+    await this.ensureSession();
+
+    const url = `${this.baseURL}${endpoint}`;
+
+    const doFetch = () => fetch(url, {
+      method: 'DELETE',
+      headers: this.buildHeaders(),
+      signal,
+    });
+
+    try {
+      const response = await doFetch();
+      return await this.handleResponse(response, doFetch);
+    } catch (error) {
+      logger.error('API DELETE Error:', error);
+      throw error;
+    }
+  }
+}
+
+// Singleton — created once on first import
+export const apiTransport = new ApiClient();
