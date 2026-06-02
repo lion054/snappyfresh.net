@@ -8,8 +8,6 @@ const BottomNav = () => {
     const { cartItemCount } = useCart();
     const { isAuthenticated, user } = useAuth();
     const path = router.pathname;
-    const isScheduledUser = isAuthenticated && user?.customer?.isInstantDelivery === false;
-
     const isActive = (href: string) => {
         if (href === '/') return path === '/';
         return path.startsWith(href);
@@ -25,26 +23,14 @@ const BottomNav = () => {
                 <span>Home</span>
             </Link>
 
-            {isScheduledUser ? (
-                <Link href="/scheduled-orders" className={`bottom-nav-item ${isActive('/scheduled-orders') ? 'active' : ''}`} aria-label="Scheduled Orders">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="3" y="4" width="18" height="18" rx="2" ry="2" />
-                        <line x1="16" y1="2" x2="16" y2="6" />
-                        <line x1="8" y1="2" x2="8" y2="6" />
-                        <line x1="3" y1="10" x2="21" y2="10" />
-                    </svg>
-                    <span>Scheduled</span>
-                </Link>
-            ) : (
-                <Link href="/store" className={`bottom-nav-item ${isActive('/store') ? 'active' : ''}`} aria-label="Shop">
-                    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
-                        <line x1="8" y1="21" x2="16" y2="21" />
-                        <line x1="12" y1="17" x2="12" y2="21" />
-                    </svg>
-                    <span>Shop</span>
-                </Link>
-            )}
+            <Link href="/store" className={`bottom-nav-item ${isActive('/store') ? 'active' : ''}`} aria-label="Shop">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2" />
+                    <line x1="8" y1="21" x2="16" y2="21" />
+                    <line x1="12" y1="17" x2="12" y2="21" />
+                </svg>
+                <span>Shop</span>
+            </Link>
 
             <Link href="/cart" className={`bottom-nav-item bottom-nav-cart ${isActive('/cart') ? 'active' : ''}`} aria-label={`Cart${cartItemCount > 0 ? ` (${cartItemCount} items)` : ''}`} aria-current={isActive('/cart') ? 'page' : undefined}>
                 <div className="bottom-nav-cart-icon">

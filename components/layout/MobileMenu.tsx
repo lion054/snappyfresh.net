@@ -119,11 +119,6 @@ const MobileMenu: FC<MobileMenuProps> = ({ isToggled, toggleClick }) => {
                                     <li>
                                         <Link href="/brochure" onClick={handleNavigate}>Brochures</Link>
                                     </li>
-                                    {isAuthenticated && !user?.customer?.isVisitor && user?.customer?.isInstantDelivery === false && (
-                                        <li>
-                                            <Link href="/scheduled-orders" onClick={handleNavigate}>Scheduled Orders</Link>
-                                        </li>
-                                    )}
                                     <li>
                                         <Link href="/wallet" onClick={handleNavigate}>Wallet</Link>
                                     </li>
