@@ -237,21 +237,6 @@ const Header = ({ toggleClick }: { toggleClick?: () => void }) => {
                                 >
                                     <i className="fi-rs-time-fast"></i> Instant
                                 </button>
-                                <button
-                                    className={`sf-delivery-badge ${selectedDelivery === 'scheduled' ? 'active' : ''}`}
-                                    onClick={() => {
-                                        setSelectedDelivery("scheduled");
-                                        if (isAuthenticated && !user?.customer?.isVisitor) {
-                                            router.push("/scheduled-orders");
-                                        } else {
-                                            openAuthModal('login', '/scheduled-orders');
-                                        }
-                                    }}
-                                    disabled={isChecking}
-                                    style={{ opacity: isChecking ? 0.6 : 1, cursor: isChecking ? 'not-allowed' : 'pointer' }}
-                                >
-                                    <i className="fi-rs-calendar"></i> Scheduled
-                                </button>
                             </div>
 
                             <div className="sf-subnav-right">

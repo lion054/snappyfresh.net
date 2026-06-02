@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Snappy Fresh - Angular App</title>
+  <link rel="icon" type="image/x-icon" href="/favicon.ico">
+
+  <!-- API Configuration -->
+  <script src="/api-config.js"></script>
+
+  <style>
+    body {
+      margin: 0;
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+        'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+        sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    #app-root {
+      min-height: 100vh;
+    }
+
+    .loading-container {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      flex-direction: column;
+      gap: 20px;
+    }
+
+    .spinner {
+      border: 4px solid #f3f3f3;
+      border-top: 4px solid #3498db;
+      border-radius: 50%;
+      width: 50px;
+      height: 50px;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+</head>
+<body>
+  <div id="app-root">
+    <div class="loading-container">
+      <div class="spinner"></div>
+      <p>Loading Snappy Fresh Angular App...</p>
+    </div>
+  </div>
+
+  <script>
+    // Initialize the Angular app
+    console.log('Snappy Fresh Angular App - API Config Loaded');
+    console.log('API URL:', window.API_CONFIG.apiURL);
+
+    // Check authentication status
+    if (window.API_CONFIG.isAuthenticated()) {
+      console.log('User is authenticated');
+    } else {
+      console.log('User is not authenticated');
+    }
+
+    // You can add Angular bootstrap code here when the Angular build is available
+    // For now, this serves as a placeholder for the Angular app
+
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if we should redirect to the React app
+      const params = new URLSearchParams(window.location.search);
+
+      if (params.get('mode') === 'react') {
+        window.location.href = '/';
+      }
+
+      // Display a message about switching between UIs
+      const appRoot = document.getElementById('app-root');
+      appRoot.innerHTML = `
+        <div class="loading-container">
+          <h1>Snappy Fresh - Angular App</h1>
+          <p>Angular application files have been copied successfully!</p>
+          <p>API Configuration is loaded and ready to use.</p>
+          <div style="margin-top: 30px;">
+            <h3>Next Steps:</h3>
+            <ol style="text-align: left; max-width: 600px;">
+              <li>Build the Angular application from yomilk-store-master</li>
+              <li>Copy the built files (dist folder) to this directory</li>
+              <li>The Angular and React apps will share the same API backend</li>
+            </ol>
+          </div>
+          <div style="margin-top: 30px;">
+            <a href="/" style="padding: 10px 20px; background: #3498db; color: white; text-decoration: none; border-radius: 5px;">
+              Go to React App
+            </a>
+          </div>
+        </div>
+      `;
+    });
+  </script>
+</body>
+</html>

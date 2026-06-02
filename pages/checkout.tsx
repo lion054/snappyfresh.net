@@ -41,10 +41,10 @@ const Checkout = () => {
     const [loading, setLoading] = useState(false);
     const [deliveryType, setDeliveryType] = useState("asap");
     const [scheduledDate, setScheduledDate] = useState("");
-    const [scheduledTimeSlot, setScheduledTimeSlot] = useState("");
-    const [availableTimeSlots, setAvailableTimeSlots] = useState<any[]>([]);
-    const [minDeliveryDate, setMinDeliveryDate] = useState("");
-    const [maxDeliveryDate, setMaxDeliveryDate] = useState("");
+    const [scheduledTimeSlot, _setScheduledTimeSlot] = useState("");
+    const [_availableTimeSlots, setAvailableTimeSlots] = useState<any[]>([]);
+    const [_minDeliveryDate, setMinDeliveryDate] = useState("");
+    const [_maxDeliveryDate, setMaxDeliveryDate] = useState("");
     const [paymentMethod, setPaymentMethod] = useState("");
     const [showPaymentPhone, setShowPaymentPhone] = useState(false);
 

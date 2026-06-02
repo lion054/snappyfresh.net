@@ -1,0 +1,27 @@
+{
+  "name": "Snappy Fresh",
+  "short_name": "SnappyFresh",
+  "description": "Zimbabwe's freshest grocery delivery — shop fresh produce, dairy, meat and more.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1a5c38",
+  "orientation": "portrait-primary",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/assets/imgs/theme/favicon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "/assets/imgs/theme/favicon.ico",
+      "sizes": "64x64 32x32 16x16",
+      "type": "image/x-icon"
+    }
+  ],
+  "categories": ["food", "shopping"],
+  "lang": "en",
+  "dir": "ltr"
+}

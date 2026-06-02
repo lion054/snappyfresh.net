@@ -73,7 +73,7 @@ const VendorSlider = () => {
                     background: white;
                     border: 2px solid #ececec;
                     border-radius: 16px;
-                    padding: 24px 20px;
+                    padding: 32px 28px;
                     text-align: center;
                     transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
                     cursor: pointer;
@@ -82,7 +82,7 @@ const VendorSlider = () => {
                     flex-direction: column;
                     align-items: center;
                     justify-content: center;
-                    min-height: 200px;
+                    min-height: 280px;
                 }
 
                 .vendor-card:hover {
@@ -92,12 +92,12 @@ const VendorSlider = () => {
                 }
 
                 .vendor-logo-wrapper {
-                    width: 120px;
-                    height: 120px;
+                    width: 150px;
+                    height: 150px;
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    margin-bottom: 16px;
+                    margin-bottom: 20px;
                     border-radius: 12px;
                     background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
                     padding: 16px;

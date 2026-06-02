@@ -780,11 +780,9 @@ function Index2() {
     );
 }
 
-// Enable ISR: Revalidate every 60 seconds (similar to oldyomik's static caching)
 export async function getStaticProps() {
     return {
         props: {},
-        revalidate: 60, // Revalidate every 60 seconds
     };
 }
 
