@@ -1,7 +1,6 @@
 import { useMemo, useEffect } from "react";
 import { useRouter } from "next/router";
 import { GetServerSideProps } from "next";
-import { useQuery } from "@tanstack/react-query";
 import ProductDetails from "../../components/ecommerce/ProductDetails";
 import Layout from '../../components/layout/Layout';
 import apiClient from "../../config/api";
@@ -9,8 +8,6 @@ import { toast } from "react-toastify";
 import { logger } from "../../lib/logger";
 import SEO from "../../components/common/SEO";
 import { generateProductSeo, generateBreadcrumbSchema } from "../../config/seo";
-import { useProducts } from "../../hooks";
-import { queryKeys } from "../../lib/queryClient";
 import { getProductImageUrl } from "../../lib/imageProxy";
 import AppErrorBoundary from "../../components/AppErrorBoundary";
 
@@ -105,6 +102,9 @@ export const getServerSideProps: GetServerSideProps<ProductIdProps> = async (con
 
 const ProductId = ({ product: initialProduct, error }: ProductIdProps) => {
     const router = useRouter();
+    const resolvedItemCode = Array.isArray(router.query.itemCode)
+        ? router.query.itemCode[0]
+        : router.query.itemCode;
 
     // Use server-side product data
     const product = initialProduct;
@@ -182,7 +182,7 @@ const ProductId = ({ product: initialProduct, error }: ProductIdProps) => {
     }
 
     // Error / not found
-    if ((isError || !product) && !isLoading) {
+    if ((error || !product) && !isLoading) {
         return (
             <>
                 <SEO title="Product Not Found | Snappy Fresh" description="The product you're looking for is not available." noindex={true} />
@@ -196,10 +196,7 @@ const ProductId = ({ product: initialProduct, error }: ProductIdProps) => {
                                         The product <strong>{resolvedItemCode}</strong> could not be found.
                                     </p>
                                     <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
-                                        <button className="btn btn-success" onClick={() => refetch()} disabled={isFetching} style={{ padding: '12px 24px', borderRadius: '8px', fontWeight: '600' }}>
-                                            {isFetching ? 'Retrying...' : 'Try Again'}
-                                        </button>
-                                        <button className="btn btn-outline-success" onClick={() => router.push('/store')} style={{ padding: '12px 24px', borderRadius: '8px', fontWeight: '600' }}>
+                                        <button type="button" className="btn btn-outline-success" onClick={() => router.push('/store')} style={{ padding: '12px 24px', borderRadius: '8px', fontWeight: '600' }}>
                                             Back to Shop
                                         </button>
                                     </div>

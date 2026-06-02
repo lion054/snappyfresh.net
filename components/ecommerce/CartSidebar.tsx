@@ -2,7 +2,7 @@
 import Link from 'next/link';
 import PerfectScrollbar from "react-perfect-scrollbar";
 import { useCart } from "../../hooks";
-import { PRODUCT_FALLBACK_IMAGE } from "../../lib/imageProxy";
+import CartSidebarItem from '../CartSidebarItem';
 
 const CartSidebar = () => {
     const {
@@ -47,68 +47,16 @@ const CartSidebar = () => {
                 </div>
                 <PerfectScrollbar>
                     <ul>
-                        {cart.map((item, index) => {
-                            const itemPrice = item.uom?.price || item.price || 0;
-                            const itemName = item.itemName || item.name || "Product";
-                            const itemImage = item.product?.images?.[0]?.img || item.image || PRODUCT_FALLBACK_IMAGE;
-
-                            return (
-                                <li key={index}>
-                                    <div className="d-flex">
-                                        <div className="flex-grow-1">
-                                            <img
-                                                src={itemImage}
-                                                style={{
-                                                    width: "75px",
-                                                    height: "75px",
-                                                }}
-                                                className="align-self-center mr-2"
-                                                alt="Product image"
-                                                onError={(e) => {
-                                                    (e.target as HTMLImageElement).src = PRODUCT_FALLBACK_IMAGE;
-                                                }}
-                                            />
-                                            <div>
-                                                <h6 className="mb-0">
-                                                    {itemName}
-                                                </h6>
-                                                <p className="mb-0">
-                                                    <span>${itemPrice.toFixed(2)} </span> x
-                                                    <span>{item.quantity}</span>
-                                                </p>
-                                                <div className="quantity-switch">
-                                                    <span
-                                                        onClick={() =>
-                                                            decreaseQuantity(index)
-                                                        }
-                                                    >
-                                                        <button>-</button>
-                                                    </span>
-                                                    <span
-                                                        onClick={() =>
-                                                            increaseQuantity(index)
-                                                        }
-                                                    >
-                                                        <button>+</button>
-                                                    </span>
-                                                </div>
-                                            </div>
-                                        </div>
-                                        <div className="single-total">
-                                            ${(item.quantity * itemPrice).toFixed(2)}
-                                            <span
-                                                className="ml-2"
-                                                onClick={() =>
-                                                    removeFromCart(index)
-                                                }
-                                            >
-                                                <button>Delete</button>
-                                            </span>
-                                        </div>
-                                    </div>
-                                </li>
-                            );
-                        })}
+                        {cart.map((item, index) => (
+                            <CartSidebarItem
+                              key={index}
+                              item={item}
+                              index={index}
+                              onIncrease={increaseQuantity}
+                              onDecrease={decreaseQuantity}
+                              onRemove={removeFromCart}
+                            />
+                        ))}
                     </ul>
                 </PerfectScrollbar>
 

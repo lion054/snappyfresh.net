@@ -8,10 +8,7 @@ const nextConfig = {
 
   // Enable aggressive image optimization
   images: {
-    // Server can't reach yomilk.erpona.com:3330 (firewall) so Next.js image
-    // optimization times out. Serve CDN images directly until the ERP firewall
-    // whitelists 167.172.179.210 on port 3330.
-    unoptimized: true,
+    unoptimized: false,
     remotePatterns: [
       {
         protocol: 'https',

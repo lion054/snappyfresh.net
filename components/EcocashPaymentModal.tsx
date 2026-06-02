@@ -1,4 +1,4 @@
-import { useState, useEffect, FC } from 'react';
+import { useState, useEffect, FC, memo } from 'react';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 import { maskPhoneNumber } from '../lib/validation';
 
@@ -602,4 +602,4 @@ const EcocashPaymentModal: FC<EcocashPaymentModalProps> = ({
   );
 };
 
-export default EcocashPaymentModal;
+export default memo(EcocashPaymentModal);

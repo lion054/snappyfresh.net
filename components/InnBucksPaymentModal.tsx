@@ -1,4 +1,4 @@
-import { FC } from 'react';;
+import { FC, memo } from 'react';
 import { toast } from 'react-toastify';
 import { useFocusTrap } from '../hooks/useFocusTrap';
 
@@ -565,4 +565,4 @@ const InnBucksPaymentModal: FC<InnBucksPaymentModalProps> = ({
   );
 };
 
-export default InnBucksPaymentModal;
+export default memo(InnBucksPaymentModal);

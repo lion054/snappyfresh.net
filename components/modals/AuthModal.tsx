@@ -1,11 +1,11 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, memo } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/router';
 import { useAuthModal } from '../../contexts/AuthModalContext';
 import { useSwipeClose } from '../../hooks/useSwipeClose';
 import LoginForm from '../auth/LoginForm';
 
-export default function AuthModal() {
+const AuthModal = () => {
   const { isOpen, closeAuthModal, pendingRedirect, view } = useAuthModal();
   const router = useRouter();
   const modalRef = useRef<HTMLDivElement>(null);
@@ -663,4 +663,6 @@ export default function AuthModal() {
       </div>
     </>
   );
-}
+};
+
+export default memo(AuthModal);
