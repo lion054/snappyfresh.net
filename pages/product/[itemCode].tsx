@@ -80,7 +80,6 @@ export const getServerSideProps: GetServerSideProps<ProductIdProps> = async (con
                 }
                 return {
                     props: { product: productData },
-                    revalidate: 60,
                 };
             }
         } catch (error) {
@@ -89,13 +88,11 @@ export const getServerSideProps: GetServerSideProps<ProductIdProps> = async (con
 
         return {
             props: { product: null, error: 'Product not found' },
-            revalidate: 10,
         };
     } catch (error) {
         logger.error('getServerSideProps error:', error);
         return {
             props: { product: null, error: 'Error loading product' },
-            revalidate: 5,
         };
     }
 };
