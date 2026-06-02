@@ -17,8 +17,8 @@ export function useLazyImage(imageRef: React.RefObject<HTMLImageElement>) {
         entries.forEach(entry => {
           if (entry.isIntersecting) {
             const img = entry.target as HTMLImageElement;
-            if (img.dataset.src) {
-              img.src = img.dataset.src;
+            if (img.dataset['src']) {
+              img['src'] = img.dataset['src'];
               img.removeAttribute('data-src');
               setIsLoaded(true);
               observer.unobserve(img);
