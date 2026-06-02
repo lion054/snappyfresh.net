@@ -10,6 +10,7 @@ import SEO from "../../components/common/SEO";
 import { generateProductSeo, generateBreadcrumbSchema } from "../../config/seo";
 import { getProductImageUrl } from "../../lib/imageProxy";
 import AppErrorBoundary from "../../components/AppErrorBoundary";
+import { productApi } from "../../config/productApi";
 
 interface ProductIdProps {
     product: any;
@@ -40,6 +41,31 @@ export const getServerSideProps: GetServerSideProps<ProductIdProps> = async (con
             }
         } catch (error) {
             logger.warn(`Failed to fetch product ${code}`, error);
+        }
+
+        // Fallback: Try to find product in cached products list
+        try {
+            const allProducts = await productApi.getProducts(200, 1);
+            if (allProducts && allProducts.length > 0) {
+                const productFromCache = allProducts.find((p: any) => {
+                    const pCode = (p.ItemCode || p.itemCode || '').toLowerCase();
+                    const codeLower = (code || '').toString().toLowerCase();
+                    return pCode === codeLower;
+                });
+
+                if (productFromCache) {
+                    const resolvedImage = getProductImageUrl(productFromCache, '');
+                    if (resolvedImage) {
+                        productFromCache.image = resolvedImage;
+                    }
+                    logger.info(`Product found in cache: ${code}`);
+                    return {
+                        props: { product: productFromCache },
+                    };
+                }
+            }
+        } catch (cacheError) {
+            logger.warn(`Cache fallback failed for ${code}`, cacheError);
         }
 
         return {
