@@ -292,9 +292,11 @@ const styles = `
     display: flex; flex-direction: column;
     text-align: center; overflow: hidden;
     page-break-inside: avoid;
+    aspect-ratio: 1 / 1;
+    height: auto;
 }
 .br-a4-img-wrap {
-    width: 100%; height: 118px;
+    width: 100%; aspect-ratio: 1 / 1;
     background: #f8f9fa; border-radius: 5px;
     overflow: hidden; border: 1px solid #f0f0f0;
     display: flex; align-items: center; justify-content: center;
@@ -302,14 +304,16 @@ const styles = `
 }
 .br-a4-img { max-width: 90%; max-height: 90%; object-fit: contain; display: block; }
 .br-a4-product-name {
-    font-size: 9.5px; font-weight: 700; color: #1a1a1a;
-    line-height: 1.25; margin: 0 0 2px 0;
+    font-size: 8.5px; font-weight: 700; color: #1a1a1a;
+    line-height: 1.2; margin: 0 0 1px 0;
     display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
-    min-height: 22px;
+    min-height: 18px;
+    flex: 0 0 auto;
 }
 .br-a4-product-desc {
-    font-size: 7.5px; color: #636363; margin: 0 0 4px 0; min-height: 12px;
+    font-size: 6.5px; color: #636363; margin: 0 0 2px 0; min-height: 10px;
     display: -webkit-box; -webkit-line-clamp: 1; -webkit-box-orient: vertical; overflow: hidden;
+    flex: 0 0 auto;
 }
 .br-a4-price-row {
     margin-top: auto; display: flex; justify-content: flex-end;
