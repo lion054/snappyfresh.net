@@ -13,6 +13,8 @@ const RETRY_CONFIG = {
   maxAttempts: 3,
   baseDelayMs: 500,
   maxDelayMs: 5000,
+  // Only retry transient failures (timeouts, rate limits, server errors)
+  // Do NOT retry 401/403 (auth errors) - refreshing won't help
   retryableStatus: [408, 429, 500, 502, 503, 504],
 };
 
@@ -303,14 +305,27 @@ class ApiClient {
   /**
    * Handle API response.
    * On 401 for guest sessions, automatically refresh and retry the request once.
+   * But if a refreshed session is ALSO rejected with 401, fail fast (don't loop).
    */
+  private lastRefreshTime: number = 0;
+  private get isRecentlyRefreshed(): boolean {
+    return Date.now() - this.lastRefreshTime < 1000; // Within 1 second
+  }
+
   async handleResponse(response: Response, retryRequest?: () => Promise<Response>): Promise<any> {
     // Quick path for explicit 401 — clear session and try refresh before reading body
     if (response.status === 401) {
+      // If we just refreshed in the last second and STILL got 401, auth is broken - fail fast
+      if (this.isRecentlyRefreshed) {
+        logger.error('Session refresh failed - API still rejecting with 401. Giving up.');
+        throw new Error('Unauthorized - Session refresh did not help');
+      }
+
       this.clearToken();
       this.sessionInitialized = false;
 
       if (retryRequest) {
+        this.lastRefreshTime = Date.now();
         const refreshed = await this.ensureSession();
         if (refreshed) {
           logger.info('Session refreshed after 401 — retrying request');
