@@ -287,15 +287,24 @@ class ApiClient {
 
   /**
    * Build headers for API requests
+   * Note: Do NOT send token to auth endpoints (like Auths/CashCustomer/Session)
+   * Auth endpoints should be called without Authorization header
    */
-  buildHeaders(): Record<string, string> {
+  buildHeaders(endpoint?: string): Record<string, string> {
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
-      'Accept': 'application/json, text/html, */*',
+      'Accept': 'text/html, application/xhtml+xml, */*',
     };
 
+    // Don't add token for auth endpoints
+    const isAuthEndpoint = endpoint && (
+      endpoint.includes('Auth') ||
+      endpoint.includes('auth') ||
+      endpoint.includes('Session')
+    );
+
     const token = this.getToken();
-    if (token) {
+    if (token && !isAuthEndpoint) {
       headers['Authorization'] = `Bearer ${token}`;
     }
 
@@ -512,7 +521,7 @@ class ApiClient {
 
     const doFetch = () => fetch(url, {
       method: 'GET',
-      headers: this.buildHeaders(),
+      headers: this.buildHeaders(endpoint),
       signal,
     });
 
@@ -532,7 +541,7 @@ class ApiClient {
 
     const doFetch = () => fetch(url, {
       method: 'POST',
-      headers: this.buildHeaders(),
+      headers: this.buildHeaders(endpoint),
       body: JSON.stringify(data),
       signal,
     });
@@ -550,7 +559,7 @@ class ApiClient {
 
     const doFetch = () => fetch(url, {
       method: 'PUT',
-      headers: this.buildHeaders(),
+      headers: this.buildHeaders(endpoint),
       body: JSON.stringify(data),
       signal,
     });
@@ -568,7 +577,7 @@ class ApiClient {
 
     const doFetch = () => fetch(url, {
       method: 'DELETE',
-      headers: this.buildHeaders(),
+      headers: this.buildHeaders(endpoint),
       signal,
     });
 
