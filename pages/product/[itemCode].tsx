@@ -58,42 +58,64 @@ const fetchProductByItemCode = async (itemCode: any, allProducts: any) => {
     }
 };
 
-interface ProductIdProps { }
+interface ProductIdProps {
+    product: any;
+    error?: string;
+}
 
-export const getServerSideProps: GetServerSideProps<ProductIdProps> = async () => {
-    return { props: {} };
+export const getServerSideProps: GetServerSideProps<ProductIdProps> = async (context) => {
+    try {
+        const itemCode = context.params?.itemCode;
+        if (!itemCode) {
+            return { notFound: true };
+        }
+
+        const code = Array.isArray(itemCode) ? itemCode[0] : itemCode;
+
+        try {
+            const productData = await (apiClient as any).getProduct(code);
+            if (productData) {
+                const resolvedImage = getProductImageUrl(productData, '');
+                if (resolvedImage) {
+                    productData.image = resolvedImage;
+                    if (productData.PicturName) productData.PicturName = resolvedImage;
+                    if (productData.picturName) productData.picturName = resolvedImage;
+                }
+                return {
+                    props: { product: productData },
+                    revalidate: 60,
+                };
+            }
+        } catch (error) {
+            logger.warn(`Failed to fetch product ${code}`, error);
+        }
+
+        return {
+            props: { product: null, error: 'Product not found' },
+            revalidate: 10,
+        };
+    } catch (error) {
+        logger.error('getServerSideProps error:', error);
+        return {
+            props: { product: null, error: 'Error loading product' },
+            revalidate: 5,
+        };
+    }
 };
 
-const ProductId = ({  }: ProductIdProps) => {
+const ProductId = ({ product: initialProduct, error }: ProductIdProps) => {
     const router = useRouter();
-    const queryCode = router.query['itemCode'];
-    const resolvedItemCode = Array.isArray(queryCode) ? queryCode[0] : queryCode;
 
-    const { products: allProducts } = useProducts();
-
-    const {
-        data: product,
-        isLoading,
-        isFetching,
-        refetch,
-        isError,
-    } = useQuery({
-        queryKey: queryKeys.products.detail(resolvedItemCode as any),
-        queryFn: () => fetchProductByItemCode(resolvedItemCode, allProducts),
-        enabled: !!resolvedItemCode,
-        retry: false,
-        staleTime: 10 * 60 * 1000,
-        gcTime: 30 * 60 * 1000,
-        refetchOnWindowFocus: false,
-        refetchOnReconnect: false,
-    });
+    // Use server-side product data
+    const product = initialProduct;
+    const isLoading = !router.isReady;
 
     useEffect(() => {
-        if (isError) {
-            logger.error('Product fetch error');
+        if (error && router.isReady) {
+            logger.error('Product fetch error:', error);
             toast.error('Failed to load product');
         }
-    }, [isError]);
+    }, [error, router.isReady]);
 
     const productTitle = useMemo(() => {
         return (product as any)?.title || (product as any)?.ItemName || (product as any)?.itemName || (product as any)?.name || 'Product';
