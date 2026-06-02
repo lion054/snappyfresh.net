@@ -62,7 +62,7 @@ interface ProductIdProps {
 
 export const getServerSideProps: GetServerSideProps<ProductIdProps> = async (context) => {
     try {
-        const itemCode = context.params?.itemCode;
+        const itemCode = context.params?.['itemCode'];
         if (!itemCode) {
             return { notFound: true };
         }
@@ -102,9 +102,9 @@ export const getServerSideProps: GetServerSideProps<ProductIdProps> = async (con
 
 const ProductId = ({ product: initialProduct, error }: ProductIdProps) => {
     const router = useRouter();
-    const resolvedItemCode = Array.isArray(router.query.itemCode)
-        ? router.query.itemCode[0]
-        : router.query.itemCode;
+    const resolvedItemCode = Array.isArray(router.query['itemCode'])
+        ? router.query['itemCode'][0]
+        : router.query['itemCode'];
 
     // Use server-side product data
     const product = initialProduct;
