@@ -11,50 +11,6 @@ import { generateProductSeo, generateBreadcrumbSchema } from "../../config/seo";
 import { getProductImageUrl } from "../../lib/imageProxy";
 import AppErrorBoundary from "../../components/AppErrorBoundary";
 
-/**
- * Fetch product by slug with fallback to products list
- */
-const fetchProductByItemCode = async (itemCode: any, allProducts: any) => {
-    try {
-        const code = Array.isArray(itemCode) ? (itemCode[0] || '') : itemCode;
-        if (!code) return null;
-
-        logger.info(`Fetching product: ${code}`);
-
-        try {
-            const productData = await (apiClient as any).getProduct(code);
-
-            if (productData) {
-                const resolvedImage = getProductImageUrl(productData, '');
-                if (resolvedImage) {
-                    productData.image = resolvedImage;
-                    if (productData.PicturName) productData.PicturName = resolvedImage;
-                    if (productData.picturName) productData.picturName = resolvedImage;
-                }
-                return productData;
-            }
-        } catch (apiError: any) {
-            logger.warn(`API fetch failed for ${code}`, apiError?.message);
-        }
-
-        // Fallback to products context
-        if (allProducts && allProducts.length > 0) {
-            const productFromCache = allProducts.find((p: any) => {
-                const pCode = (p.ItemCode || p.itemCode || '').toLowerCase();
-                const codeLower = (code || '').toString().toLowerCase();
-                return pCode === codeLower;
-            });
-
-            if (productFromCache) return productFromCache;
-        }
-
-        return null;
-    } catch (error) {
-        logger.error(`Unexpected error fetching product:`, error);
-        return null;
-    }
-};
-
 interface ProductIdProps {
     product: any;
     error?: string;

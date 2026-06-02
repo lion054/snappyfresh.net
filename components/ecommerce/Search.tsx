@@ -1,5 +1,5 @@
 import { useRouter } from "next/router";
-import { useState, useEffect, useRef } from 'react';;
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { useProducts } from "../../hooks";
 import { useCategories } from "../../hooks/useCategories";
 
@@ -19,8 +19,7 @@ const Search = () => {
 
     const router = useRouter();
 
-    // Client-side autocomplete using context products (no API call)
-    const fetchAutocompleteSuggestions = (query: string) => {
+    const fetchAutocompleteSuggestions = useCallback((query: string) => {
         if (!query || query.trim().length < 2 || !isReady) {
             setSuggestions([]);
             setShowSuggestions(false);
@@ -53,10 +52,9 @@ const Search = () => {
         setSuggestions(uniqueSuggestions.slice(0, 8));
         setShowSuggestions(uniqueSuggestions.length > 0);
         setSelectedSuggestionIndex(-1);
-    };
+    }, [allProducts, isReady]);
 
-    // Handle input with debouncing (300ms - faster since no API call)
-    const handleInputChange = (e: any) => {
+    const handleInputChange = useCallback((e: any) => {
         const value = e.target.value;
         setSearchTerm(value);
         setSelectedSuggestionIndex(-1);
@@ -68,7 +66,7 @@ const Search = () => {
         debounceTimerRef.current = setTimeout(() => {
             fetchAutocompleteSuggestions(value);
         }, 300);
-    };
+    }, [fetchAutocompleteSuggestions]);
 
     const handleKeyDown = (e: any) => {
         if (!showSuggestions || suggestions.length === 0) {
