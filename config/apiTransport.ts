@@ -277,7 +277,10 @@ class ApiClient {
           logger.warn('Guest session response has no token:', data);
         }
       } catch (error) {
-        logger.error('Error getting guest session:', error);
+        // Stealth mode: log only in dev, silent fail in production
+        if (process.env.NODE_ENV === 'development') {
+          logger.error('Error getting guest session:', error);
+        }
         // Continue anyway - some endpoints might not need auth
       } finally {
         this.sessionPromise = null;

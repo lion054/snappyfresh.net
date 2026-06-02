@@ -16,15 +16,16 @@ export const logger = {
   },
 
   warn: (...args: any[]) => {
-    if (!isTest) {
+    if (isDevelopment && !isTest) {
       console.warn('[WARN]', ...args)
     }
+    // In production: stealth mode - silent
   },
 
   error: (...args: any[]) => {
-    if (!isTest) {
+    if (isDevelopment && !isTest) {
       console.error('[ERROR]', ...args)
     }
-    // In production, could send to monitoring service (Sentry, etc.)
+    // In production: stealth mode - silent (could send to monitoring service like Sentry)
   },
 }
