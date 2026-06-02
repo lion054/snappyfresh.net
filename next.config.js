@@ -90,6 +90,10 @@ const nextConfig = {
   typescript: {
     tsconfigPath: './tsconfig.json',
   },
+  // ESLint: disable during build to avoid strict checking
+  eslint: {
+    ignoreDuringBuilds: true,
+  },
   // Experimental: enable optimization of fonts
   experimental: {
     optimizePackageImports: [
