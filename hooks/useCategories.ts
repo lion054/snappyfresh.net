@@ -9,7 +9,7 @@
 
 import { useQuery } from '@tanstack/react-query';
 import apiClient from '../config/api';
-import { queryKeys } from '../lib/queryClient';
+import { queryKeys, CACHE_TIERS } from '../lib/queryClient';
 import { logger } from '../lib/logger';
 
 const normalizeCategories = (response: any) => {
@@ -93,8 +93,7 @@ export const useCategories = (options: { skip?: boolean } = {}) => {
     queryKey: queryKeys.categories.list(),
     queryFn: fetchCategories,
     enabled: !skip,
-    staleTime: 30 * 60 * 1000,    // 30 min — categories rarely change
-    gcTime: 60 * 60 * 1000,        // 1 hour
+    ...CACHE_TIERS.stable,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

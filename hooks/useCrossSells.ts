@@ -11,7 +11,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { queryKeys } from '../lib/queryClient';
+import { queryKeys, CACHE_TIERS } from '../lib/queryClient';
 import apiClient from '../config/api';
 import { useProducts } from '../contexts/ProductsContext';
 import { logger } from '../lib/logger';
@@ -276,8 +276,7 @@ export function useCrossSells(product: Product | null | undefined) {
       return fetchCrossSellsForProduct(product!, allProducts, excludeCodes);
     },
     enabled: !!product && !!itemCode && isReady,
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    ...CACHE_TIERS.frequent,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,
@@ -303,8 +302,7 @@ export function useCartCrossSells(cartItems: CartItem[]) {
       return fetchCrossSellsForCart(cartItems, allProducts, excludeCodes);
     },
     enabled: cartItems.length > 0 && isReady,
-    staleTime: 5 * 60 * 1000,
-    gcTime: 15 * 60 * 1000,
+    ...CACHE_TIERS.search,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

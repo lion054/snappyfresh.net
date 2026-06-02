@@ -7,7 +7,7 @@
  */
 
 import { useQuery } from '@tanstack/react-query';
-import { queryKeys } from '../lib/queryClient';
+import { queryKeys, CACHE_TIERS } from '../lib/queryClient';
 import apiClient from '../config/api';
 import { useProducts } from '../contexts/ProductsContext';
 import { logger } from '../lib/logger';
@@ -158,8 +158,7 @@ export function useUpsells(product: Product | null | undefined) {
     queryKey: queryKeys.upsells.list(itemCode),
     queryFn: () => fetchUpsells(product!, allProducts),
     enabled: !!product && !!itemCode && isReady,
-    staleTime: 10 * 60 * 1000,
-    gcTime: 30 * 60 * 1000,
+    ...CACHE_TIERS.frequent,
     retry: false,
     refetchOnWindowFocus: false,
     refetchOnReconnect: false,

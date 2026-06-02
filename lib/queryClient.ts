@@ -6,6 +6,33 @@
 import { QueryClient } from '@tanstack/react-query';
 
 /**
+ * Cache configuration tiers for different data types
+ * Organize by frequency of change, not by feature
+ */
+export const CACHE_TIERS = {
+  // Stable: Product catalogs, categories (change infrequently)
+  stable: {
+    staleTime: 30 * 60 * 1000,  // 30 minutes
+    gcTime: 60 * 60 * 1000,      // 1 hour
+  },
+  // Frequent: Recommendations, upsells (change moderately)
+  frequent: {
+    staleTime: 10 * 60 * 1000,   // 10 minutes
+    gcTime: 30 * 60 * 1000,      // 30 minutes
+  },
+  // Realtime: Cart, user data (change constantly)
+  realtime: {
+    staleTime: 1 * 60 * 1000,    // 1 minute
+    gcTime: 5 * 60 * 1000,       // 5 minutes
+  },
+  // Search: Query results (change per search, short retention)
+  search: {
+    staleTime: 5 * 60 * 1000,    // 5 minutes
+    gcTime: 15 * 60 * 1000,      // 15 minutes
+  },
+};
+
+/**
  * Factory function to create a new QueryClient instance
  * This ensures each component gets its own client and prevents HMR issues
  */
@@ -13,11 +40,9 @@ export function createQueryClient() {
   return new QueryClient({
     defaultOptions: {
       queries: {
-        // Stale time: Data is fresh for 5 minutes (faster for frequently accessed data)
-        staleTime: 5 * 60 * 1000,
-
-        // Cache time: Keep unused data for 1 hour
-        gcTime: 60 * 60 * 1000,
+        // Default to frequent tier (middle ground)
+        staleTime: CACHE_TIERS.frequent.staleTime,
+        gcTime: CACHE_TIERS.frequent.gcTime,
 
         // Disable automatic query retries to prevent repeated request loops
         retry: false,
