@@ -100,9 +100,14 @@ class ApiClient {
   }
 
   /**
-   * Get authentication token from client-side cookie
+   * Get authentication token from client-side cookie or in-memory SSR cache
    */
   getToken() {
+    // SSR: use in-memory token if available
+    if (this.cachedToken) {
+      return this.cachedToken;
+    }
+    // Client: use secure storage
     if (typeof window !== 'undefined') {
       return secureStorage.getToken();
     }
@@ -110,13 +115,21 @@ class ApiClient {
   }
 
   /**
-   * Set authentication token in client-side cookie
+   * Set authentication token in client-side cookie or in-memory SSR cache
    */
   setToken(token: string) {
+    // Always cache in memory for SSR lifecycle
+    this.cachedToken = token;
+    // Client-side: also persist to secure storage
     if (typeof window !== 'undefined') {
       secureStorage.setToken(token);
     }
   }
+
+  /**
+   * In-memory token cache for SSR requests
+   */
+  private cachedToken: string | null = null;
 
   /**
    * Get auth user session
@@ -233,6 +246,11 @@ class ApiClient {
         }
 
         const data = await response.json();
+        logger.info('Guest session response:', {
+          hasToken: !!data.token,
+          tokenLength: data.token ? String(data.token).length : 0,
+          dataKeys: Object.keys(data),
+        });
 
         if (data && data.token) {
           // Ensure guest sessions are marked as visitors
@@ -245,8 +263,12 @@ class ApiClient {
 
           this.saveAuthUser(data);
           this.sessionInitialized = true;
-          logger.info('Guest session initialized successfully');
+          logger.info('Guest session initialized successfully', {
+            token: data.token.substring(0, 20) + '...',
+          });
           return true;
+        } else {
+          logger.warn('Guest session response has no token:', data);
         }
       } catch (error) {
         logger.error('Error getting guest session:', error);
