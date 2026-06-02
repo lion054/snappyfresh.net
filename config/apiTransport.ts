@@ -145,18 +145,22 @@ class ApiClient {
 
   /**
    * Save auth user session
+   * Works both on server (SSR) and client - always cache token in memory
    */
   saveAuthUser(authData: Record<string, unknown> & { token?: string; tokenExpiry?: string; customer?: Record<string, unknown> }) {
-    if (typeof window !== 'undefined') {
-      if (authData.token) {
-        if (!authData.tokenExpiry) {
-          const tokenExpiry = this.getTokenExpiryFromJwt(authData.token);
-          if (tokenExpiry) {
-            authData.tokenExpiry = tokenExpiry;
-          }
+    // Always cache token in memory for SSR and client
+    if (authData.token) {
+      if (!authData.tokenExpiry) {
+        const tokenExpiry = this.getTokenExpiryFromJwt(authData.token);
+        if (tokenExpiry) {
+          authData.tokenExpiry = tokenExpiry;
         }
-        this.setToken(authData.token);
       }
+      this.setToken(authData.token);
+    }
+
+    // Client-side: also save to secure storage
+    if (typeof window !== 'undefined') {
       secureStorage.setUser(authData);
     }
   }
