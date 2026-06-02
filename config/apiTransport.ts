@@ -441,7 +441,7 @@ class ApiClient {
         if (RETRY_CONFIG.retryableStatus.includes(response.status)) {
           if (attempt === RETRY_CONFIG.maxAttempts) {
             logger.error(`[${method} ${endpoint}] Server error after ${attempt} attempts:`, {
-              status: response.statusCode,
+              status: response.status,
               attempt,
             });
             throw new Error(`API server error (${response.status}): ${response.statusText}`);
