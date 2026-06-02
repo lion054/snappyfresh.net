@@ -7,6 +7,25 @@ import { secureStorage } from '../lib/secureStorage';
 import { logger } from '../lib/logger';
 
 /**
+ * Retry configuration and utility
+ */
+const RETRY_CONFIG = {
+  maxAttempts: 3,
+  baseDelayMs: 500,
+  maxDelayMs: 5000,
+  retryableStatus: [408, 429, 500, 502, 503, 504],
+};
+
+/**
+ * Calculate exponential backoff delay with jitter
+ */
+function getBackoffDelay(attempt: number): number {
+  const exponentialDelay = RETRY_CONFIG.baseDelayMs * Math.pow(2, attempt - 1);
+  const jitter = Math.random() * 100;
+  return Math.min(exponentialDelay + jitter, RETRY_CONFIG.maxDelayMs);
+}
+
+/**
  * Recursively convert PascalCase keys from SAP B1 API to camelCase.
  * This means downstream code can rely on camelCase only instead of
  * checking both `foo.DocTotal` and `foo.docTotal` everywhere.
@@ -378,7 +397,72 @@ class ApiClient {
   }
 
   /**
-   * Make a GET request
+   * Execute fetch with retry logic and exponential backoff
+   */
+  private async executeWithRetry(
+    doFetch: () => Promise<Response>,
+    endpoint: string,
+    method: string
+  ): Promise<any> {
+    let lastError: any;
+
+    for (let attempt = 1; attempt <= RETRY_CONFIG.maxAttempts; attempt++) {
+      try {
+        const response = await Promise.race([
+          doFetch(),
+          new Promise<Response>((_, reject) =>
+            setTimeout(() => reject(new Error('API request timeout after 10s')), 10000)
+          ),
+        ]);
+
+        // Check if response is retryable
+        if (RETRY_CONFIG.retryableStatus.includes(response.status)) {
+          if (attempt === RETRY_CONFIG.maxAttempts) {
+            logger.error(`[${method} ${endpoint}] Server error after ${attempt} attempts:`, {
+              status: response.statusCode,
+              attempt,
+            });
+            throw new Error(`API server error (${response.status}): ${response.statusText}`);
+          }
+
+          const delay = getBackoffDelay(attempt);
+          logger.warn(`[${method} ${endpoint}] Retryable status ${response.status}, waiting ${delay}ms (attempt ${attempt}/${RETRY_CONFIG.maxAttempts})`);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+
+        return await this.handleResponse(response, doFetch);
+      } catch (error: any) {
+        lastError = error;
+
+        // Determine if error is retryable
+        const isNetworkError = error.message.includes('fetch') || error.message.includes('timeout') || error.name === 'TypeError';
+        const isRetryable = isNetworkError && attempt < RETRY_CONFIG.maxAttempts;
+
+        if (isRetryable) {
+          const delay = getBackoffDelay(attempt);
+          logger.warn(`[${method} ${endpoint}] Network error, retrying in ${delay}ms (attempt ${attempt}/${RETRY_CONFIG.maxAttempts}):`, error.message);
+          await new Promise(resolve => setTimeout(resolve, delay));
+          continue;
+        }
+
+        // Non-retryable error or final attempt
+        const errorMessage = error.message || String(error);
+        logger.error(`[${method} ${endpoint}] Failed after ${attempt} attempt(s):`, {
+          error: errorMessage,
+          endpoint,
+          method,
+        });
+
+        throw error;
+      }
+    }
+
+    throw lastError || new Error('API request failed');
+  }
+
+  /**
+   * Make a GET request with retry logic
    */
   async get(endpoint: string, params: Record<string, string> = {}, signal?: AbortSignal): Promise<any> {
     await this.ensureSession();
@@ -395,17 +479,11 @@ class ApiClient {
       signal,
     });
 
-    try {
-      const response = await doFetch();
-      return await this.handleResponse(response, doFetch);
-    } catch (error) {
-      logger.error('API GET Error:', error);
-      throw error;
-    }
+    return this.executeWithRetry(doFetch, endpoint, 'GET');
   }
 
   /**
-   * Make a POST request
+   * Make a POST request with retry logic
    */
   async post(endpoint: string, data: unknown = {}, signal?: AbortSignal): Promise<any> {
     // Don't ensure session for auth endpoints
@@ -422,17 +500,11 @@ class ApiClient {
       signal,
     });
 
-    try {
-      const response = await doFetch();
-      return await this.handleResponse(response, doFetch);
-    } catch (error) {
-      logger.error('API POST Error:', error);
-      throw error;
-    }
+    return this.executeWithRetry(doFetch, endpoint, 'POST');
   }
 
   /**
-   * Make a PUT request
+   * Make a PUT request with retry logic
    */
   async put(endpoint: string, data: unknown = {}, signal?: AbortSignal): Promise<any> {
     await this.ensureSession();
@@ -446,17 +518,11 @@ class ApiClient {
       signal,
     });
 
-    try {
-      const response = await doFetch();
-      return await this.handleResponse(response, doFetch);
-    } catch (error) {
-      logger.error('API PUT Error:', error);
-      throw error;
-    }
+    return this.executeWithRetry(doFetch, endpoint, 'PUT');
   }
 
   /**
-   * Make a DELETE request
+   * Make a DELETE request with retry logic
    */
   async delete(endpoint: string, signal?: AbortSignal): Promise<any> {
     await this.ensureSession();
@@ -469,13 +535,7 @@ class ApiClient {
       signal,
     });
 
-    try {
-      const response = await doFetch();
-      return await this.handleResponse(response, doFetch);
-    } catch (error) {
-      logger.error('API DELETE Error:', error);
-      throw error;
-    }
+    return this.executeWithRetry(doFetch, endpoint, 'DELETE');
   }
 }
 
