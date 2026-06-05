@@ -18,12 +18,12 @@ export const environment = {
   // authUrl: 'http://196.27.105.3:8091/api/',
 
   // Production Secure
-  // apiURL: 'https://yomilk.erpona.com:8091/api/',
-  // authUrl: 'https://yomilk.erpona.com:8091/api/',
+  // apiURL: 'https://yomilk.onaerp.africa:8091/api/',
+  // authUrl: 'https://yomilk.onaerp.africa:8091/api/',
 
   // Production Secure V2
-  apiURL: 'https://yomilk.erpona.com:8092/api/',
-  authUrl: 'https://yomilk.erpona.com:8092/api/',
+  apiURL: 'https://yomilk.onaerp.africa:8092/api/',
+  authUrl: 'https://yomilk.onaerp.africa:8092/api/',
   siteUrl: 'https://snappyfresh.net/',
   returnUrl: "https://snappyfresh.net/check-order",
   currency: 'USD',

@@ -3,7 +3,7 @@ export const PRODUCT_FALLBACK_IMAGE = '/assets/images/products/product-placehold
 // In production, the server can't reach ERP port 3330 (firewall).
 // Serve images directly from the ERP CDN — browsers CAN reach it.
 // In development, use the local proxy for sharp optimization.
-const ERP_CDN_BASE = 'https://yomilk.erpona.com:3330/';
+const ERP_CDN_BASE = 'https://yomilk.onaerp.africa:3330/';
 const USE_DIRECT_CDN = process.env.NODE_ENV === 'production';
 const IMAGE_PROXY_PATH = '/api/img-proxy?path=';
 

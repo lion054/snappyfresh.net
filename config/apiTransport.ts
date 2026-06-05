@@ -76,8 +76,8 @@ class ApiClient {
       logger.warn('NEXT_PUBLIC_API_BASE_URL is not set — using fallback. Set this in .env.local for production.');
     }
 
-    this.baseURL = process.env['NEXT_PUBLIC_API_BASE_URL'] || 'https://yomilk.erpona.com:8092/api/';
-    this.authUrl = process.env['NEXT_PUBLIC_API_BASE_URL'] || 'https://yomilk.erpona.com:8092/api/';
+    this.baseURL = process.env['NEXT_PUBLIC_API_BASE_URL'] || 'https://yomilk.onaerp.africa:8092/api/';
+    this.authUrl = process.env['NEXT_PUBLIC_API_BASE_URL'] || 'https://yomilk.onaerp.africa:8092/api/';
     this.siteUrl = process.env['NEXT_PUBLIC_SITE_URL'] || 'https://snappyfresh.net/';
     this.returnUrl = process.env['NEXT_PUBLIC_RETURN_URL'] || 'https://snappyfresh.net/check-order';
     this.companyName = process.env['NEXT_PUBLIC_COMPANY_NAME'] || 'Yomilk';

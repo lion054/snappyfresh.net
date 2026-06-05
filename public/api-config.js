@@ -5,8 +5,8 @@
 
 const API_CONFIG = {
   // API Base URLs
-  apiURL: 'https://yomilk.erpona.com:8092/api/',
-  authUrl: 'https://yomilk.erpona.com:8092/api/',
+  apiURL: 'https://yomilk.onaerp.africa:8092/api/',
+  authUrl: 'https://yomilk.onaerp.africa:8092/api/',
 
   // Site Configuration
   siteUrl: 'https://snappyfresh.net/',

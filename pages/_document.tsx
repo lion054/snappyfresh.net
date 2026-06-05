@@ -15,8 +15,8 @@ export default function Document() {
                 {/* Preconnect to critical origins */}
                 <link rel="preconnect" href="https://fonts.googleapis.com" />
                 <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="anonymous" />
-                <link rel="preconnect" href="https://yomilk.erpona.com:8092" />
-                <link rel="preconnect" href="https://yomilk.erpona.com:3330" />
+                <link rel="preconnect" href="https://yomilk.onaerp.africa:8092" />
+                <link rel="preconnect" href="https://yomilk.onaerp.africa:3330" />
                 {/* Preload primary font for faster text rendering */}
                 <link
                     rel="preload"

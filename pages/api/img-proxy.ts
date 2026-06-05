@@ -5,8 +5,8 @@ import fs from 'fs';
 import path from 'path';
 import crypto from 'crypto';
 
-const ERP_BASE_URL = 'https://yomilk.erpona.com:3330/';
-const ALLOWED_HOSTS = ['yomilk.erpona.com'];
+const ERP_BASE_URL = 'https://yomilk.onaerp.africa:3330/';
+const ALLOWED_HOSTS = ['yomilk.onaerp.africa'];
 const httpsAgent = new https.Agent({
   rejectUnauthorized: false, // ERP uses self-signed cert
 });

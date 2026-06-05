@@ -2,7 +2,7 @@ import type { NextApiRequest, NextApiResponse } from 'next';
 import { logger } from '../../lib/logger';
 
 const DOMAIN = 'https://snappyfresh.net';
-const API_BASE = process.env['NEXT_PUBLIC_API_BASE_URL'] || 'https://yomilk.erpona.com:8092/api/';
+const API_BASE = process.env['NEXT_PUBLIC_API_BASE_URL'] || 'https://yomilk.onaerp.africa:8092/api/';
 
 const staticRoutes = [
   { path: '/', changefreq: 'daily', priority: '1.0' },

@@ -12,7 +12,7 @@ const nextConfig = {
     remotePatterns: [
       {
         protocol: 'https',
-        hostname: 'yomilk.erpona.com',
+        hostname: 'yomilk.onaerp.africa',
         port: '3330',
         pathname: '/**',
       },
@@ -46,8 +46,8 @@ const nextConfig = {
               `script-src ${scriptSrc}; ` +
               "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; " +
               "font-src 'self' https://fonts.gstatic.com data:; " +
-              "connect-src 'self' https://yomilk.erpona.com:8092; " +
-              "img-src 'self' data: https://yomilk.erpona.com:3330; " +
+              "connect-src 'self' https://yomilk.onaerp.africa:8092; " +
+              "img-src 'self' data: https://yomilk.onaerp.africa:3330; " +
               "frame-ancestors 'none'; " +
               "base-uri 'self'; " +
               "object-src 'none';"
